@@ -91,10 +91,10 @@ function SettingsPage() {
               ] as const).map((t) => (
                 <button
                   key={t.k}
-                  onClick={() => t.k !== "system" && setTheme(t.k)}
+                  onClick={() => { if (t.k !== "system") setTheme(t.k); }}
                   className={cn(
                     "flex flex-col items-center gap-2 rounded-xl border p-4 text-sm transition-all",
-                    theme === t.k && t.k !== "system" ? "border-primary bg-primary/5 shadow-glow" : "border-border hover:border-primary/40",
+                    t.k !== "system" && theme === t.k ? "border-primary bg-primary/5 shadow-glow" : "border-border hover:border-primary/40",
                   )}
                 >
                   <t.i className="h-5 w-5" />
