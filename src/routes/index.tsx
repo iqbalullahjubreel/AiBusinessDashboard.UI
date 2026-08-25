@@ -1,14 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, BarChart3, FileText, ScrollText, Shield, Zap, Brain, Workflow, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { brand } from "@/lib/brand";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "NovaAI — The AI Business Dashboard" },
-      { name: "description", content: "Premium AI-powered analytics, summaries, and assistant for modern teams." },
-      { property: "og:title", content: "NovaAI — The AI Business Dashboard" },
-      { property: "og:description", content: "Premium AI-powered analytics, summaries, and assistant for modern teams." },
+      { title: brand.landingTitle },
+      { name: "description", content: brand.landingDescription },
+      { property: "og:title", content: brand.landingTitle },
+      { property: "og:description", content: brand.landingDescription },
     ],
   }),
   component: Landing,
