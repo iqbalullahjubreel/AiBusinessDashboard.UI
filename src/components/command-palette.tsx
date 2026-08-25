@@ -8,6 +8,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/contexts/auth-context";
 import { BarChart3, FileText, LayoutDashboard, ScrollText, Settings, Shield, Sparkles, User as UserIcon } from "lucide-react";
 
 const items = [
@@ -16,7 +17,7 @@ const items = [
   { label: "AI Assistant", to: "/dashboard/chat", icon: Sparkles, group: "Pages" },
   { label: "Files", to: "/dashboard/files", icon: FileText, group: "Pages" },
   { label: "Summaries", to: "/dashboard/summaries", icon: ScrollText, group: "Pages" },
-  { label: "Admin", to: "/dashboard/admin", icon: Shield, group: "Pages" },
+  { label: "Admin", to: "/dashboard/admin", icon: Shield, group: "Pages", adminOnly: true },
   { label: "Settings", to: "/dashboard/settings", icon: Settings, group: "Account" },
   { label: "Profile", to: "/dashboard/profile", icon: UserIcon, group: "Account" },
 ] as const;
@@ -29,6 +30,7 @@ const actions = [
 
 export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const go = (to: string) => {
     onOpenChange(false);
     navigate({ to });
@@ -39,7 +41,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Pages">
-          {items.filter((i) => i.group === "Pages").map((i) => (
+          {items.filter((i) => i.group === "Pages" && (!("adminOnly" in i) || user?.role === "admin")).map((i) => (
             <CommandItem key={i.to} onSelect={() => go(i.to)}>
               <i.icon className="mr-2 h-4 w-4" /> {i.label}
             </CommandItem>
