@@ -198,7 +198,7 @@ function DashboardHome() {
             <div className="mb-2 grid h-10 w-10 place-items-center rounded-xl bg-gradient-primary shadow-glow">
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
-            <DialogTitle className="text-2xl">Welcome to NovaAI</DialogTitle>
+            <DialogTitle className="text-2xl">Welcome to {brand.name}</DialogTitle>
             <DialogDescription>Three quick things to know before you dive in.</DialogDescription>
           </DialogHeader>
           <ul className="space-y-3 py-2 text-sm">

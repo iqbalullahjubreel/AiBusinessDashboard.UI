@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { brand } from "@/lib/brand";
 import { Sparkles, ArrowLeft } from "lucide-react";
 
 export function AuthShell({ title, subtitle, children, footer }: {
@@ -38,7 +39,7 @@ export function AuthShell({ title, subtitle, children, footer }: {
           <div className="w-full max-w-md rounded-2xl border border-border bg-card/60 p-6 shadow-card backdrop-blur-xl">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span>NovaAI Insight</span>
+              <span>{brand.name} Insight</span>
             </div>
             <p className="mt-4 text-lg font-medium leading-relaxed">
               "Enterprise upgrades drove <span className="text-gradient-primary font-semibold">41% of new ARR</span> this quarter.

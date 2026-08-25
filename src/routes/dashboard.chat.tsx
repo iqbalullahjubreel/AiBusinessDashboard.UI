@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { brand } from "@/lib/brand";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { aiApi } from "@/services/api";
@@ -110,7 +111,7 @@ function ChatPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
-                placeholder="Message NovaAI... (Shift+Enter for newline)"
+                placeholder={`Message ${brand.name}... (Shift+Enter for newline)`}
                 className="min-h-[44px] resize-none border-0 bg-transparent p-2 focus-visible:ring-0 focus-visible:ring-offset-0"
                 rows={1}
               />
