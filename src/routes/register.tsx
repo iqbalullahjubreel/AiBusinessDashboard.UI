@@ -25,8 +25,8 @@ function RegisterPage() {
     setLoading(true);
     try {
       await register(name, email, password);
-      toast.success("Account created");
-      navigate({ to: "/dashboard" });
+      toast.success("Account created — please log in");
+      navigate({ to: "/login" });
     } catch {
       toast.error("Could not create account");
     } finally {

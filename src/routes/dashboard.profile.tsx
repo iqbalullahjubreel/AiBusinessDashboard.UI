@@ -37,9 +37,9 @@ function ProfilePage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         {[
-          { l: "Total chats", v: "184" },
-          { l: "Files uploaded", v: "26" },
-          { l: "Summaries created", v: "42" },
+          { l: "Total chats", v: "0" },
+          { l: "Files uploaded", v: "0" },
+          { l: "Summaries created", v: "0" },
         ].map((s) => (
           <div key={s.l} className="rounded-xl border border-border bg-card p-5 shadow-card">
             <p className="text-xs uppercase text-muted-foreground">{s.l}</p>
@@ -50,7 +50,8 @@ function ProfilePage() {
 
       <div className="rounded-xl border border-border bg-card p-5 shadow-card">
         <p className="text-sm font-semibold">About</p>
-        <p className="mt-2 text-sm text-muted-foreground">Building NovaAI to help teams work smarter with AI. Member since {user.createdAt}.</p>
+        <p className="mt-2 text-sm text-muted-foreground">No bio yet.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Member since {memberSince}</p>
       </div>
     </div>
   );
