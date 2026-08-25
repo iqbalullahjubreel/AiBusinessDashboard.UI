@@ -11,6 +11,10 @@ export const Route = createFileRoute("/dashboard/profile")({
 function ProfilePage() {
   const { user } = useAuth();
   if (!user) return null;
+  const parsed = new Date(user.createdAt);
+  const memberSince = Number.isNaN(parsed.getTime())
+    ? "—"
+    : parsed.toLocaleDateString(undefined, { month: "long", year: "numeric" });
   return (
     <div className="space-y-6">
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
