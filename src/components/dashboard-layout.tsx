@@ -43,7 +43,7 @@ const nav = [
   { to: "/dashboard/chat", label: "AI Assistant", icon: Sparkles },
   { to: "/dashboard/files", label: "Files", icon: FileText },
   { to: "/dashboard/summaries", label: "Summaries", icon: ScrollText },
-  { to: "/dashboard/admin", label: "Admin", icon: Shield },
+  { to: "/dashboard/admin", label: "Admin", icon: Shield, adminOnly: true },
 ] as const;
 
 const secondary = [
@@ -105,7 +105,7 @@ export function DashboardLayout() {
 
           <nav className="flex-1 space-y-1 px-3 py-2">
             <p className="px-3 pb-1 pt-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Workspace</p>
-            {nav.map((item) => {
+            {nav.filter((item) => !("adminOnly" in item) || user.role === "admin").map((item) => {
               const active = path === item.to || (item.to !== "/dashboard" && path.startsWith(item.to));
               return (
                 <Link
