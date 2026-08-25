@@ -1,14 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, BarChart3, FileText, ScrollText, Shield, Zap, Brain, Workflow, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { brand } from "@/lib/brand";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "NovaAI — The AI Business Dashboard" },
-      { name: "description", content: "Premium AI-powered analytics, summaries, and assistant for modern teams." },
-      { property: "og:title", content: "NovaAI — The AI Business Dashboard" },
-      { property: "og:description", content: "Premium AI-powered analytics, summaries, and assistant for modern teams." },
+      { title: brand.landingTitle },
+      { name: "description", content: brand.landingDescription },
+      { property: "og:title", content: brand.landingTitle },
+      { property: "og:description", content: brand.landingDescription },
     ],
   }),
   component: Landing,
@@ -25,7 +26,7 @@ function Landing() {
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary shadow-glow">
             <Sparkles className="h-4.5 w-4.5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-semibold tracking-tight">Nova<span className="text-gradient-primary">AI</span></span>
+          <span className="text-lg font-semibold tracking-tight">{brand.namePrefix}<span className="text-gradient-primary">{brand.nameSuffix}</span></span>
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           <a href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Features</a>
@@ -53,7 +54,7 @@ function Landing() {
             <span className="text-gradient-primary">actually opens.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-pretty text-base text-muted-foreground md:text-lg">
-            NovaAI brings analytics, file intelligence, and an always-on assistant into one premium workspace —
+            {brand.name} brings analytics, file intelligence, and an always-on assistant into one premium workspace —
             so your team spends less time digging and more time deciding.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -170,7 +171,7 @@ function Landing() {
 
       <footer className="relative z-10 mx-auto max-w-7xl border-t border-border px-6 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} NovaAI. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {brand.name}. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-foreground"><Github className="h-4 w-4" /></a>
             <a href="#" className="hover:text-foreground">Privacy</a>

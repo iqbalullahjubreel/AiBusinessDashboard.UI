@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { brand } from "@/lib/brand";
 import { kpis, activity, revenueSeries, recentFiles, aiUsageSeries } from "@/lib/mock-data";
 import { Sparkles, ArrowUpRight, ArrowDownRight, Plus, Upload, MessageSquarePlus, FileText, X } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -198,7 +199,7 @@ function DashboardHome() {
             <div className="mb-2 grid h-10 w-10 place-items-center rounded-xl bg-gradient-primary shadow-glow">
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
-            <DialogTitle className="text-2xl">Welcome to NovaAI</DialogTitle>
+            <DialogTitle className="text-2xl">Welcome to {brand.name}</DialogTitle>
             <DialogDescription>Three quick things to know before you dive in.</DialogDescription>
           </DialogHeader>
           <ul className="space-y-3 py-2 text-sm">

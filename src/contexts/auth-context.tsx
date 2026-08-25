@@ -48,8 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       persist(session, remember);
     },
     async register(name, email, password) {
-      const session = await authApi.register(name, email, password);
-      persist(session, true);
+      // Intentionally do NOT persist the session: the user must log in after registering.
+      await authApi.register(name, email, password);
     },
     async logout() {
       await authApi.logout();

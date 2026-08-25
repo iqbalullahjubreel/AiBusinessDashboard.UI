@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { brand } from "@/lib/brand";
 import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "@/contexts/theme-context";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -46,7 +47,7 @@ function SettingsPage() {
               <Field label="Full name" defaultValue={user.name} />
               <Field label="Email" type="email" defaultValue={user.email} />
               <Field label="Job title" placeholder="Head of Growth" />
-              <Field label="Company" placeholder="NovaAI Inc." />
+              <Field label="Company" placeholder={brand.company} />
             </div>
             <Button className="mt-5 bg-gradient-primary shadow-glow hover:opacity-90">Save changes</Button>
           </Card>
@@ -82,7 +83,7 @@ function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="appearance" className="mt-4">
-          <Card title="Theme" desc="Customize how NovaAI looks for you.">
+          <Card title="Theme" desc={`Customize how ${brand.name} looks for you.`}>
             <div className="grid max-w-md grid-cols-3 gap-2">
               {([
                 { k: "light", l: "Light", i: Sun },

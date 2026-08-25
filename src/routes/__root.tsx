@@ -11,6 +11,7 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { Toaster } from "@/components/ui/sonner";
+import { brand } from "@/lib/brand";
 
 function NotFoundComponent() {
   return (
@@ -56,15 +57,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "NovaAI — AI Business Dashboard" },
-      { name: "description", content: "Modern AI-powered business analytics, file processing, and assistant — built for teams." },
-      { name: "author", content: "NovaAI" },
-      { property: "og:title", content: "NovaAI — AI Business Dashboard" },
-      { property: "og:description", content: "Modern AI-powered business analytics, file processing, and assistant." },
+      { title: brand.title },
+      { name: "description", content: brand.description },
+      { name: "author", content: brand.name },
+      { property: "og:site_name", content: brand.name },
+      { property: "og:title", content: brand.title },
+      { property: "og:description", content: brand.description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,

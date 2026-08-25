@@ -35,6 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { CommandPalette } from "@/components/command-palette";
 import { NotificationsPopover } from "@/components/notifications-popover";
 import { cn } from "@/lib/utils";
+import { brand } from "@/lib/brand";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -42,7 +43,7 @@ const nav = [
   { to: "/dashboard/chat", label: "AI Assistant", icon: Sparkles },
   { to: "/dashboard/files", label: "Files", icon: FileText },
   { to: "/dashboard/summaries", label: "Summaries", icon: ScrollText },
-  { to: "/dashboard/admin", label: "Admin", icon: Shield },
+  { to: "/dashboard/admin", label: "Admin", icon: Shield, adminOnly: true },
 ] as const;
 
 const secondary = [
@@ -95,7 +96,7 @@ export function DashboardLayout() {
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-primary shadow-glow">
                 <Sparkles className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="text-base font-semibold tracking-tight">Nova<span className="text-gradient-primary">AI</span></span>
+              <span className="text-base font-semibold tracking-tight">{brand.namePrefix}<span className="text-gradient-primary">{brand.nameSuffix}</span></span>
             </Link>
             <button className="lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close menu">
               <X className="h-5 w-5" />
@@ -104,7 +105,7 @@ export function DashboardLayout() {
 
           <nav className="flex-1 space-y-1 px-3 py-2">
             <p className="px-3 pb-1 pt-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Workspace</p>
-            {nav.map((item) => {
+            {nav.filter((item) => !("adminOnly" in item) || user.role === "admin").map((item) => {
               const active = path === item.to || (item.to !== "/dashboard" && path.startsWith(item.to));
               return (
                 <Link
