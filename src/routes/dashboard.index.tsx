@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { brand } from "@/lib/brand";
 import { kpis, activity, revenueSeries, recentFiles, aiUsageSeries } from "@/lib/mock-data";
 import { Sparkles, ArrowUpRight, ArrowDownRight, Plus, Upload, MessageSquarePlus, FileText, X } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
