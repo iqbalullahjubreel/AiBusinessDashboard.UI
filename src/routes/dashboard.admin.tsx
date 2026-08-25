@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { mockUsers, kpis } from "@/lib/mock-data";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,17 @@ import { MoreHorizontal, Plus, Activity, Users, Server, CreditCard } from "lucid
 import type { Role } from "@/lib/types";
 
 export const Route = createFileRoute("/dashboard/admin")({
+  beforeLoad: () => {
+    if (typeof window === "undefined") return;
+    let role: string | undefined;
+    try {
+      const raw = localStorage.getItem("auth.user");
+      if (raw) role = (JSON.parse(raw) as { role?: string }).role;
+    } catch {
+      role = undefined;
+    }
+    if (role !== "admin") throw redirect({ to: "/dashboard" });
+  },
   component: AdminPage,
 });
 
