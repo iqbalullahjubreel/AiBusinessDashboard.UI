@@ -122,3 +122,107 @@ export const filesApi = {
     filesStore = filesStore.filter((f) => f.id !== id);
   },
 };
+
+// ---------------------------------------------------------------------
+// Real backend layer (ASP.NET Core) — base URL from VITE_API_BASE_URL
+// ---------------------------------------------------------------------
+import type {
+  AdminActivityItem,
+  AdminFile,
+  AdminLog,
+  AdminSubscription,
+  AdminUser,
+  AnalyticsSummary,
+  ApiKey,
+  BillingRecord,
+  CreatedApiKey,
+  FeatureFlag,
+  NotificationItem,
+  NotificationPreference,
+  Plan,
+  Subscription,
+} from "@/lib/types";
+
+function authToken(): string | null {
+  try {
+    return localStorage.getItem("auth.token") ?? sessionStorage.getItem("auth.token");
+  } catch {
+    return null;
+  }
+}
+
+async function http<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const token = authToken();
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init.headers ?? {}),
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `Request failed (${res.status})`);
+  }
+  if (res.status === 204) return undefined as T;
+  const body = await res.text();
+  return (body ? JSON.parse(body) : undefined) as T;
+}
+
+const json = (data: unknown) => ({ body: JSON.stringify(data) });
+
+// Analytics
+export const analyticsApi = {
+  getMine: (days = 30) => http<AnalyticsSummary>(`/analytics/mine?days=${days}`),
+};
+
+// Notifications
+export const notificationsApi = {
+  list: () => http<NotificationItem[]>("/notifications"),
+  markRead: (id: string) => http<void>(`/notifications/${id}/read`, { method: "POST" }),
+  markAllRead: () => http<void>("/notifications/read-all", { method: "POST" }),
+};
+
+export const notificationPreferencesApi = {
+  list: () => http<NotificationPreference[]>("/notification-preferences"),
+  update: (category: string, enabled: boolean) =>
+    http<void>(`/notification-preferences/${encodeURIComponent(category)}`, {
+      method: "PUT",
+      ...json({ enabled }),
+    }),
+};
+
+// Subscription / billing
+export const subscriptionApi = {
+  getMine: () => http<Subscription>("/subscriptions/mine"),
+  getPlans: () => http<Plan[]>("/subscriptions/plans"),
+  initialize: (planName: string) =>
+    http<{ authorizationUrl: string; reference?: string }>("/subscriptions/initialize", {
+      method: "POST",
+      ...json({ planName }),
+    }),
+  getBillingHistory: () => http<BillingRecord[]>("/subscriptions/billing-history"),
+};
+
+// API keys
+export const apiKeysApi = {
+  list: () => http<ApiKey[]>("/api-keys"),
+  create: (name: string) => http<CreatedApiKey>("/api-keys", { method: "POST", ...json({ name }) }),
+  revoke: (id: string) => http<void>(`/api-keys/${id}`, { method: "DELETE" }),
+};
+
+// Admin
+export const adminApi = {
+  getUsers: () => http<AdminUser[]>("/admin/users"),
+  updateUserRole: (userId: string, role: string) =>
+    http<void>(`/admin/users/${userId}/role`, { method: "PUT", ...json({ role }) }),
+  getSubscriptions: () => http<AdminSubscription[]>("/admin/subscriptions"),
+  getFeatureFlags: () => http<FeatureFlag[]>("/admin/feature-flags"),
+  toggleFeatureFlag: (id: string, enabled: boolean) =>
+    http<void>(`/admin/feature-flags/${id}`, { method: "PUT", ...json({ enabled }) }),
+  getAllFiles: () => http<AdminFile[]>("/admin/files"),
+  deleteFile: (id: string) => http<void>(`/admin/files/${id}`, { method: "DELETE" }),
+  getActivity: () => http<AdminActivityItem[]>("/admin/activity"),
+  getLogs: () => http<AdminLog[]>("/admin/logs"),
+};
