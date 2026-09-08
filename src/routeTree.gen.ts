@@ -20,8 +20,10 @@ import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settin
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
 import { Route as DashboardFilesRouteImport } from './routes/dashboard.files'
 import { Route as DashboardChatRouteImport } from './routes/dashboard.chat'
+import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
 import { Route as DashboardAdminRouteImport } from './routes/dashboard.admin'
+import { Route as DashboardBillingCallbackRouteImport } from './routes/dashboard.billing.callback'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -78,6 +80,11 @@ const DashboardChatRoute = DashboardChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardBillingRoute = DashboardBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -88,6 +95,12 @@ const DashboardAdminRoute = DashboardAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardBillingCallbackRoute =
+  DashboardBillingCallbackRouteImport.update({
+    id: '/callback',
+    path: '/callback',
+    getParentRoute: () => DashboardBillingRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -97,12 +110,14 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/billing': typeof DashboardBillingRouteWithChildren
   '/dashboard/chat': typeof DashboardChatRoute
   '/dashboard/files': typeof DashboardFilesRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/summaries': typeof DashboardSummariesRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/billing/callback': typeof DashboardBillingCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -111,12 +126,14 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/billing': typeof DashboardBillingRouteWithChildren
   '/dashboard/chat': typeof DashboardChatRoute
   '/dashboard/files': typeof DashboardFilesRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/summaries': typeof DashboardSummariesRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/billing/callback': typeof DashboardBillingCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -127,12 +144,14 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/billing': typeof DashboardBillingRouteWithChildren
   '/dashboard/chat': typeof DashboardChatRoute
   '/dashboard/files': typeof DashboardFilesRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/summaries': typeof DashboardSummariesRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/billing/callback': typeof DashboardBillingCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -144,12 +163,14 @@ export interface FileRouteTypes {
     | '/register'
     | '/dashboard/admin'
     | '/dashboard/analytics'
+    | '/dashboard/billing'
     | '/dashboard/chat'
     | '/dashboard/files'
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard/summaries'
     | '/dashboard/'
+    | '/dashboard/billing/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -158,12 +179,14 @@ export interface FileRouteTypes {
     | '/register'
     | '/dashboard/admin'
     | '/dashboard/analytics'
+    | '/dashboard/billing'
     | '/dashboard/chat'
     | '/dashboard/files'
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard/summaries'
     | '/dashboard'
+    | '/dashboard/billing/callback'
   id:
     | '__root__'
     | '/'
@@ -173,12 +196,14 @@ export interface FileRouteTypes {
     | '/register'
     | '/dashboard/admin'
     | '/dashboard/analytics'
+    | '/dashboard/billing'
     | '/dashboard/chat'
     | '/dashboard/files'
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard/summaries'
     | '/dashboard/'
+    | '/dashboard/billing/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -268,6 +293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardChatRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/billing': {
+      id: '/dashboard/billing'
+      path: '/billing'
+      fullPath: '/dashboard/billing'
+      preLoaderRoute: typeof DashboardBillingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/analytics': {
       id: '/dashboard/analytics'
       path: '/analytics'
@@ -282,12 +314,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAdminRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/billing/callback': {
+      id: '/dashboard/billing/callback'
+      path: '/callback'
+      fullPath: '/dashboard/billing/callback'
+      preLoaderRoute: typeof DashboardBillingCallbackRouteImport
+      parentRoute: typeof DashboardBillingRoute
+    }
   }
 }
+
+interface DashboardBillingRouteChildren {
+  DashboardBillingCallbackRoute: typeof DashboardBillingCallbackRoute
+}
+
+const DashboardBillingRouteChildren: DashboardBillingRouteChildren = {
+  DashboardBillingCallbackRoute: DashboardBillingCallbackRoute,
+}
+
+const DashboardBillingRouteWithChildren =
+  DashboardBillingRoute._addFileChildren(DashboardBillingRouteChildren)
 
 interface DashboardRouteChildren {
   DashboardAdminRoute: typeof DashboardAdminRoute
   DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
+  DashboardBillingRoute: typeof DashboardBillingRouteWithChildren
   DashboardChatRoute: typeof DashboardChatRoute
   DashboardFilesRoute: typeof DashboardFilesRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
@@ -299,6 +350,7 @@ interface DashboardRouteChildren {
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAdminRoute: DashboardAdminRoute,
   DashboardAnalyticsRoute: DashboardAnalyticsRoute,
+  DashboardBillingRoute: DashboardBillingRouteWithChildren,
   DashboardChatRoute: DashboardChatRoute,
   DashboardFilesRoute: DashboardFilesRoute,
   DashboardProfileRoute: DashboardProfileRoute,
