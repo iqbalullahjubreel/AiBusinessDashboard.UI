@@ -17,6 +17,7 @@ import {
   Moon,
   Command,
   ChevronRight,
+  CreditCard,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
@@ -33,7 +34,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { CommandPalette } from "@/components/command-palette";
-import { NotificationsPopover } from "@/components/notifications-popover";
+import { NotificationsPopover, useNotifications } from "@/components/notifications-popover";
+import { useQuery } from "@tanstack/react-query";
+import { subscriptionApi } from "@/services/api";
 import { cn } from "@/lib/utils";
 import { brand } from "@/lib/brand";
 
@@ -43,6 +46,7 @@ const nav = [
   { to: "/dashboard/chat", label: "AI Assistant", icon: Sparkles },
   { to: "/dashboard/files", label: "Files", icon: FileText },
   { to: "/dashboard/summaries", label: "Summaries", icon: ScrollText },
+  { to: "/dashboard/billing", label: "Billing", icon: CreditCard },
   { to: "/dashboard/admin", label: "Admin", icon: Shield, adminOnly: true },
 ] as const;
 
@@ -77,6 +81,8 @@ export function DashboardLayout() {
   useEffect(() => setMobileOpen(false), [path]);
 
   const crumbs = path.split("/").filter(Boolean);
+  const { data: notifications } = useNotifications();
+  const unreadCount = (notifications ?? []).filter((n) => !n.isRead).length;
 
   if (!user) return null;
 
@@ -146,13 +152,7 @@ export function DashboardLayout() {
             })}
           </nav>
 
-          <div className="m-3 rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-3">
-            <p className="text-xs font-medium">Pro plan</p>
-            <p className="mt-1 text-xs text-muted-foreground">82% of monthly AI quota used</p>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-sidebar-border">
-              <div className="h-full bg-gradient-primary" style={{ width: "82%" }} />
-            </div>
-          </div>
+          <QuotaWidget />
         </aside>
 
         {mobileOpen && (
@@ -197,7 +197,11 @@ export function DashboardLayout() {
             <NotificationsPopover>
               <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
                 <Bell className="h-4 w-4" />
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
+                {unreadCount > 0 && (
+                  <span className="absolute right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </Button>
             </NotificationsPopover>
 
@@ -243,6 +247,26 @@ export function DashboardLayout() {
       </div>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+    </div>
+  );
+}
+
+function QuotaWidget() {
+  const { data, isError } = useQuery({ queryKey: ["subscription"], queryFn: () => subscriptionApi.getMine(), retry: 1 });
+  if (isError) return null;
+  const quota = data?.monthlyQuota ?? 0;
+  const used = data?.usedThisPeriod ?? 0;
+  const pct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
+
+  return (
+    <div className="m-3 rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-3">
+      <p className="text-xs font-medium">{data ? `${data.planName} plan` : "Loading plan..."}</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {data ? `${pct}% of monthly AI quota used` : "Fetching usage..."}
+      </p>
+      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-sidebar-border">
+        <div className="h-full bg-gradient-primary transition-all" style={{ width: `${pct}%` }} />
+      </div>
     </div>
   );
 }
