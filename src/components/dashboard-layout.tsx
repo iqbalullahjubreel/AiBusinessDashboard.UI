@@ -252,7 +252,8 @@ export function DashboardLayout() {
 }
 
 function QuotaWidget() {
-  const { data } = useQuery({ queryKey: ["subscription"], queryFn: () => subscriptionApi.getMine() });
+  const { data, isError } = useQuery({ queryKey: ["subscription"], queryFn: () => subscriptionApi.getMine(), retry: 1 });
+  if (isError) return null;
   const quota = data?.monthlyQuota ?? 0;
   const used = data?.usedThisPeriod ?? 0;
   const pct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
