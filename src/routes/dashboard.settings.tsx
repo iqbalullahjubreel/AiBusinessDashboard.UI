@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { brand } from "@/lib/brand";
 import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "@/contexts/theme-context";
@@ -6,11 +6,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Sun, Moon, Monitor, Eye, EyeOff, Copy } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { Sun, Moon, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ApiKeysCard } from "@/components/api-keys-card";
+import { NotificationPreferencesCard } from "@/components/notification-preferences-card";
 
 export const Route = createFileRoute("/dashboard/settings")({
   component: SettingsPage,
@@ -19,9 +18,8 @@ export const Route = createFileRoute("/dashboard/settings")({
 function SettingsPage() {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
-  const [showKey, setShowKey] = useState(false);
-  const apiKey = "nova_sk_live_8f3a2c1e9b4d5f6789abcdef01234567";
-  const copy = async () => { await navigator.clipboard.writeText(apiKey); toast.success("API key copied"); };
+  const navigate = useNavigate();
+
 
   if (!user) return null;
 
