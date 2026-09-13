@@ -65,22 +65,9 @@ function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="notifications" className="mt-4">
-          <Card title="Notifications" desc="Choose what you want to be notified about.">
-            <div className="divide-y divide-border">
-              {[
-                { l: "Email digests", d: "Weekly summary of your workspace" },
-                { l: "AI insights", d: "Get notified when new insights are generated" },
-                { l: "Mentions", d: "When teammates mention you" },
-                { l: "Billing updates", d: "Invoices and plan changes" },
-              ].map((n, i) => (
-                <div key={n.l} className="flex items-center justify-between py-3">
-                  <div><p className="text-sm font-medium">{n.l}</p><p className="text-xs text-muted-foreground">{n.d}</p></div>
-                  <Switch defaultChecked={i !== 2} />
-                </div>
-              ))}
-            </div>
-          </Card>
+          <NotificationPreferencesCard />
         </TabsContent>
+
 
         <TabsContent value="appearance" className="mt-4">
           <Card title="Theme" desc={`Customize how ${brand.name} looks for you.`}>
