@@ -107,21 +107,12 @@ function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="api" className="mt-4 space-y-4">
-          <Card title="API key" desc="Use this key to authenticate API requests.">
-            <div className="flex max-w-xl items-center gap-2 rounded-lg border border-border bg-background/40 p-2">
-              <code className="flex-1 truncate font-mono text-xs">{showKey ? apiKey : "•".repeat(apiKey.length)}</code>
-              <Button size="icon" variant="ghost" onClick={() => setShowKey((s) => !s)}>{showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</Button>
-              <Button size="icon" variant="ghost" onClick={copy}><Copy className="h-4 w-4" /></Button>
-            </div>
-            <Button variant="outline" className="mt-4">Regenerate key</Button>
-          </Card>
-          <Card title="Billing" desc="You're on the Pro plan.">
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-background/40 p-4">
-              <div><p className="font-semibold">Pro · $49/mo</p><p className="text-xs text-muted-foreground">Renews May 28, 2026</p></div>
-              <Button variant="outline">Manage plan</Button>
-            </div>
+          <ApiKeysCard />
+          <Card title="Billing" desc="Manage your plan, usage and payment history.">
+            <Button variant="outline" onClick={() => navigate({ to: "/dashboard/billing" })}>Go to billing</Button>
           </Card>
         </TabsContent>
+
       </Tabs>
     </div>
   );
