@@ -1,17 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { filesApi } from "@/services/api";
-import { recentFiles } from "@/lib/mock-data";
 import type { UploadedFile } from "@/lib/types";
 import { Upload, FileText, FileImage, FileSpreadsheet, FileType2, Trash2, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { EmptyState } from "@/components/empty-state";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/files")({
   component: FilesPage,
 });
+
+const filesKey = ["files"] as const;
 
 const iconFor = (type: string) => {
   if (type.startsWith("image/")) return FileImage;
@@ -21,40 +24,56 @@ const iconFor = (type: string) => {
 };
 
 function FilesPage() {
-  const [files, setFiles] = useState<UploadedFile[]>(recentFiles);
+  const qc = useQueryClient();
+  const { data: files = [], isLoading } = useQuery({ queryKey: filesKey, queryFn: () => filesApi.list() });
+  // Locally tracked in-flight uploads (progress only); replaced by the server response when done.
+  const [pending, setPending] = useState<UploadedFile[]>([]);
   const [drag, setDrag] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const upload = useCallback(async (list: FileList | File[]) => {
     for (const file of Array.from(list)) {
-      const placeholder: UploadedFile = {
-        id: crypto.randomUUID(),
-        name: file.name,
-        size: file.size,
-        type: file.type || "application/octet-stream",
-        status: "uploading",
-        progress: 0,
-        uploadedAt: new Date().toISOString(),
-      };
-      setFiles((f) => [placeholder, ...f]);
+      const tempId = crypto.randomUUID();
+      setPending((p) => [
+        {
+          id: tempId,
+          name: file.name,
+          size: file.size,
+          type: file.type || "application/octet-stream",
+          status: "uploading",
+          progress: 0,
+          uploadedAt: new Date().toISOString(),
+        },
+        ...p,
+      ]);
       try {
-        await filesApi.upload(file, (p) => {
-          setFiles((all) => all.map((x) => (x.id === placeholder.id ? { ...x, progress: p } : x)));
+        const saved = await filesApi.upload(file, (progress) => {
+          setPending((all) => all.map((x) => (x.id === tempId ? { ...x, progress } : x)));
         });
-        setFiles((all) => all.map((x) => (x.id === placeholder.id ? { ...x, status: "ready", progress: 100 } : x)));
+        // Use the real record returned by the API, not a fabricated one.
+        qc.setQueryData<UploadedFile[]>(filesKey, (old) => [saved, ...(old ?? []).filter((f) => f.id !== saved.id)]);
+        qc.invalidateQueries({ queryKey: filesKey });
         toast.success(`${file.name} uploaded`);
       } catch {
-        setFiles((all) => all.map((x) => (x.id === placeholder.id ? { ...x, status: "error" } : x)));
         toast.error(`${file.name} failed`);
+      } finally {
+        setPending((all) => all.filter((x) => x.id !== tempId));
       }
     }
-  }, []);
+  }, [qc]);
 
   const remove = async (id: string) => {
-    await filesApi.remove(id);
-    setFiles((f) => f.filter((x) => x.id !== id));
-    toast.success("File removed");
+    try {
+      await filesApi.remove(id);
+      qc.setQueryData<UploadedFile[]>(filesKey, (old) => (old ?? []).filter((f) => f.id !== id));
+      qc.invalidateQueries({ queryKey: filesKey });
+      toast.success("File removed");
+    } catch {
+      toast.error("Couldn't remove that file");
+    }
   };
+
+  const rows = [...pending, ...files];
 
   return (
     <div className="space-y-6">
@@ -89,10 +108,11 @@ function FilesPage() {
       <div className="rounded-xl border border-border bg-card p-5 shadow-card">
         <p className="text-sm font-semibold">Upload history</p>
         <div className="mt-4 divide-y divide-border">
-          {files.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">No files yet — upload your first one above.</p>
+          {isLoading && <p className="p-4 text-sm text-muted-foreground">Loading...</p>}
+          {!isLoading && rows.length === 0 && (
+            <EmptyState icon={Upload} title="No files yet" description="Upload your first one above." />
           )}
-          {files.map((f) => {
+          {rows.map((f) => {
             const Icon = iconFor(f.type);
             return (
               <div key={f.id} className="flex items-center gap-3 py-3">
@@ -107,7 +127,9 @@ function FilesPage() {
                   {f.status === "ready" && <span className="flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success"><CheckCircle2 className="h-3 w-3" /> Ready</span>}
                   {f.status === "processing" && <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning">Processing</span>}
                   {f.status === "error" && <span className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3 w-3" /> Failed</span>}
-                  <Button size="icon" variant="ghost" onClick={() => remove(f.id)}><Trash2 className="h-4 w-4" /></Button>
+                  {f.status !== "uploading" && (
+                    <Button size="icon" variant="ghost" onClick={() => remove(f.id)}><Trash2 className="h-4 w-4" /></Button>
+                  )}
                 </div>
               </div>
             );

@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { brand } from "@/lib/brand";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { aiApi } from "@/services/api";
-import { aiPromptSuggestions, conversations as initialConvs } from "@/lib/mock-data";
+import { aiPromptSuggestions } from "@/lib/mock-data";
 import type { ChatMessage, Conversation } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,51 +16,102 @@ export const Route = createFileRoute("/dashboard/chat")({
   component: ChatPage,
 });
 
+const conversationsKey = ["conversations"] as const;
+
 function ChatPage() {
-  const [convs, setConvs] = useState<Conversation[]>(initialConvs);
-  const [activeId, setActiveId] = useState<string>(initialConvs[0]?.id ?? "");
+  const qc = useQueryClient();
+  const [activeId, setActiveId] = useState<string>("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const active = convs.find((c) => c.id === activeId);
+  const { data: convs = [] } = useQuery({
+    queryKey: conversationsKey,
+    queryFn: () => aiApi.listConversations(),
+  });
+
+  // Select the first real conversation once the list loads.
+  useEffect(() => {
+    if (!activeId && convs.length > 0) setActiveId(convs[0].id);
+  }, [convs, activeId]);
+
+  // Load real message history whenever the active conversation changes.
+  useEffect(() => {
+    if (!activeId) {
+      setMessages([]);
+      return;
+    }
+    let cancelled = false;
+    setMessages([]);
+    aiApi.getConversation(activeId).then((c) => {
+      if (!cancelled) setMessages(c?.messages ?? []);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeId]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [active?.messages.length, streaming]);
+  }, [messages.length, streaming]);
+
+  const active = convs.find((c) => c.id === activeId);
 
   const send = async (text: string) => {
     if (!text.trim() || streaming) return;
-    const userMsg: ChatMessage = { id: crypto.randomUUID(), role: "user", content: text, createdAt: new Date().toISOString() };
-    setConvs((cs) => cs.map((c) => c.id === activeId ? { ...c, messages: [...c.messages, userMsg], updatedAt: new Date().toISOString() } : c));
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: text,
+      createdAt: new Date().toISOString(),
+    };
+    const isNewEmptyConversation = messages.length === 0;
+    setMessages((m) => [...m, userMsg]);
     setInput("");
     setStreaming(true);
+
+    const assistantId = crypto.randomUUID();
+    setMessages((m) => [
+      ...m,
+      { id: assistantId, role: "assistant", content: "", createdAt: new Date().toISOString() },
+    ]);
+
     try {
-      const reply = await aiApi.chat(text, activeId);
-      // Streaming simulation
-      const empty: ChatMessage = { ...reply, content: "" };
-      setConvs((cs) => cs.map((c) => c.id === activeId ? { ...c, messages: [...c.messages, empty] } : c));
-      const chars = reply.content.split("");
-      for (let i = 0; i < chars.length; i++) {
-        await new Promise((r) => setTimeout(r, 8));
-        setConvs((cs) => cs.map((c) => {
-          if (c.id !== activeId) return c;
-          const msgs = [...c.messages];
-          const last = msgs[msgs.length - 1];
-          msgs[msgs.length - 1] = { ...last, content: last.content + chars[i] };
-          return { ...c, messages: msgs };
-        }));
-      }
+      await aiApi.streamChat({
+        message: text,
+        // A brand-new, empty conversation has no real backend id yet.
+        conversationId: isNewEmptyConversation ? undefined : activeId,
+        onMeta: (meta) => {
+          if (meta.conversationId && meta.conversationId !== activeId) {
+            setActiveId(meta.conversationId);
+            qc.invalidateQueries({ queryKey: conversationsKey });
+          }
+        },
+        onChunk: (chunk) => {
+          setMessages((m) =>
+            m.map((msg) => (msg.id === assistantId ? { ...msg, content: msg.content + chunk } : msg)),
+          );
+        },
+      });
+      qc.invalidateQueries({ queryKey: conversationsKey });
+    } catch {
+      setMessages((m) => m.filter((msg) => msg.id !== assistantId));
+      toast.error("Couldn't reach the assistant. Please try again.");
     } finally {
       setStreaming(false);
     }
   };
 
-  const newChat = () => {
-    const id = crypto.randomUUID();
-    const conv: Conversation = { id, title: "New conversation", updatedAt: new Date().toISOString(), messages: [] };
-    setConvs((c) => [conv, ...c]);
-    setActiveId(id);
+  const newChat = async () => {
+    try {
+      const conv: Conversation = await aiApi.createConversation();
+      qc.setQueryData<Conversation[]>(conversationsKey, (old) => [conv, ...(old ?? [])]);
+      setActiveId(conv.id);
+      setMessages([]);
+    } catch {
+      toast.error("Couldn't start a new conversation.");
+    }
   };
 
   return (
@@ -68,6 +120,9 @@ function ChatPage() {
       <aside className="hidden flex-col rounded-xl border border-border bg-card p-3 shadow-card lg:flex">
         <Button onClick={newChat} className="bg-gradient-primary shadow-glow hover:opacity-90"><Plus className="mr-1.5 h-4 w-4" /> New chat</Button>
         <div className="mt-3 flex-1 space-y-1 overflow-y-auto scrollbar-thin">
+          {convs.length === 0 && (
+            <p className="px-3 py-6 text-center text-xs text-muted-foreground">No conversations yet.</p>
+          )}
           {convs.map((c) => (
             <button
               key={c.id}
@@ -94,11 +149,11 @@ function ChatPage() {
         </div>
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 scrollbar-thin">
-          {active && active.messages.length === 0 ? (
+          {messages.length === 0 ? (
             <EmptyState onPick={send} />
           ) : (
             <div className="mx-auto max-w-3xl space-y-6">
-              {active?.messages.map((m) => <Bubble key={m.id} m={m} />)}
+              {messages.map((m) => <Bubble key={m.id} m={m} />)}
               {streaming && <TypingDots />}
             </div>
           )}
