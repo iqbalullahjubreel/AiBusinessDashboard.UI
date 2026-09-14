@@ -64,6 +64,83 @@ export const aiApi = {
     const content = cannedReplies[Math.floor(Math.random() * cannedReplies.length)];
     return { id: crypto.randomUUID(), role: "assistant", content, createdAt: new Date().toISOString() };
   },
+  async createConversation(title = "New conversation"): Promise<Conversation> {
+    const res = await fetch(`${API_BASE_URL}/conversations`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(authToken() ? { Authorization: `Bearer ${authToken()}` } : {}),
+      },
+      body: JSON.stringify({ title }),
+    });
+    if (!res.ok) throw new Error(`Request failed (${res.status})`);
+    return (await res.json()) as Conversation;
+  },
+  /**
+   * Real streaming chat over SSE. Calls onChunk for each token and onMeta once
+   * the backend reports the conversation/message ids.
+   */
+  async streamChat(opts: {
+    message: string;
+    conversationId?: string;
+    onChunk: (text: string) => void;
+    onMeta?: (meta: { conversationId?: string; messageId?: string }) => void;
+    signal?: AbortSignal;
+  }): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/chat/stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+        ...(authToken() ? { Authorization: `Bearer ${authToken()}` } : {}),
+      },
+      body: JSON.stringify({ message: opts.message, conversationId: opts.conversationId }),
+      signal: opts.signal,
+    });
+    if (!res.ok || !res.body) throw new Error(`Request failed (${res.status})`);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    const handleEvent = (raw: string) => {
+      const dataLines = raw
+        .split("\n")
+        .filter((l) => l.startsWith("data:"))
+        .map((l) => l.slice(5).trim());
+      if (dataLines.length === 0) return;
+      const data = dataLines.join("\n");
+      if (data === "[DONE]") return;
+      try {
+        const parsed = JSON.parse(data) as {
+          type?: string;
+          content?: string;
+          delta?: string;
+          conversationId?: string;
+          messageId?: string;
+        };
+        if (parsed.conversationId || parsed.messageId) {
+          opts.onMeta?.({ conversationId: parsed.conversationId, messageId: parsed.messageId });
+        }
+        const text = parsed.delta ?? parsed.content;
+        if (text) opts.onChunk(text);
+      } catch {
+        opts.onChunk(data);
+      }
+    };
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let idx: number;
+      while ((idx = buffer.indexOf("\n\n")) !== -1) {
+        handleEvent(buffer.slice(0, idx));
+        buffer = buffer.slice(idx + 2);
+      }
+    }
+    if (buffer.trim()) handleEvent(buffer);
+  },
   async listConversations(): Promise<Conversation[]> {
     await delay(200);
     return mockConvs;
